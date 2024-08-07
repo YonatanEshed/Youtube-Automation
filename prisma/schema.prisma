@@ -1,0 +1,68 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id               Int                @unique @default(autoincrement())
+  username         String
+  email            String             @unique
+  password         String
+  role             Role               @default(USER)
+  UserOrganization UserOrganization[]
+}
+
+model Organization {
+  id               Int                @unique @default(autoincrement())
+  name             String
+  description      String
+  UserOrganization UserOrganization[]
+  Video            Video[]
+  YoutubeChannel   YoutubeChannel[]
+}
+
+model UserOrganization {
+  user           User         @relation(fields: [userId], references: [id])
+  userId         Int
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+
+  @@id([userId, organizationId])
+}
+
+model Video {
+  id             Int          @unique @default(autoincrement())
+  title          String
+  description    String?
+  visibility     Visibility?  @default(PUBLIC)
+  s3Url          String
+  createdAt      DateTime
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  isApproved     Boolean
+  isUploaded     Boolean
+}
+
+model YoutubeChannel {
+  id             Int          @unique @default(autoincrement())
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId Int
+  accessToken    String
+  refreshToken   String
+  tokenExpiry    DateTime
+}
+
+enum Role {
+  ADMIN
+  USER
+}
+
+enum Visibility {
+  PUBLIC
+  PRIVATE
+  UNLISTED
+}
